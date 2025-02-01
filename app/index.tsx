@@ -57,8 +57,8 @@ export default function Index() {
       if (data.streamTitle) {
         const [artist, song] = data.streamTitle.split(' - ');
         setMusicData({
-          currentSong: song.trim(),
-          currentArtist: artist.trim(),
+          currentSong: song?.trim(),
+          currentArtist: artist?.trim(),
         });
       }
     };
