@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, StatusBar } from "react-native";
 import { Audio } from 'expo-av';
 import { useEffect, useState } from "react";
 import { Image } from 'expo-image';
@@ -16,15 +16,14 @@ export default function Index() {
   const [sound, setSound] = useState<Sound | null>(null);
 
   const [musicData, setMusicData] = useState({
-    currentSong: null,
-    currentArtist: null,
+    currentSong: "",
+    currentArtist: "",
   });
 
   const [coverUrl, setCoverUrl] = useState();
 
   useEffect(() => {
     if (musicData.currentArtist && musicData.currentSong) {
-      // Criação da função que vai fazer a requisição para o Deezer
       const fetchDeezerData = async () => {
         try {
           const response = await fetch(
@@ -32,7 +31,9 @@ export default function Index() {
           );
           const data = await response.json();
           if (data.data && data.data[0] && data.data[0].album) {
-            setCoverUrl(data.data[0].album.cover_big); // Atualiza a capa
+            setCoverUrl(data.data[0].album.cover_big);
+          } else {
+            setCoverUrl(logo);
           }
         } catch (error) {
           console.error('Erro ao buscar dados no Deezer:', error);
@@ -51,9 +52,15 @@ export default function Index() {
       const data = JSON.parse(event.data);
       if (data.streamTitle) {
         const [artist, song] = data.streamTitle.split(' - ');
+
+        console.log(data.streamTitle);
+
+        const updatedArtist = artist ? artist.trim() : "[Desconhecido]";
+        const updatedSong = song ? song.trim() : "[Desconhecido]";
+
         setMusicData({
-          currentSong: song?.trim(),
-          currentArtist: artist?.trim(),
+          currentArtist: updatedArtist,
+          currentSong: updatedSong
         });
       }
     };
@@ -101,6 +108,7 @@ export default function Index() {
         contentFit="cover"
         transition={1000}
         blurRadius={20}
+        allowDownscaling={true}
       />
 
       <Image
@@ -117,6 +125,8 @@ export default function Index() {
       <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
         <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000" }}>{playing ? "PAUSAR" : "TOCAR"}</Text>
       </TouchableOpacity>
+
+      <StatusBar hidden translucent />
     </View>
   );
 }
@@ -146,7 +156,7 @@ const styles = StyleSheet.create({
   image: {
     width: 350,
     height: 350,
-    borderRadius: "100%",
+    borderRadius: 200,
     borderColor: "white",
     borderWidth: 2,
     shadowColor: "black",
