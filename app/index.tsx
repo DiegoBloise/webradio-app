@@ -16,15 +16,15 @@ export default function Index() {
   const [sound, setSound] = useState<Sound | null>(null);
 
   const [musicData, setMusicData] = useState({
-    currentSong: "",
-    currentArtist: "",
+    currentSong: "WebRadio GRM",
+    currentArtist: "A sua música toca aqui!",
     aditionalInfo: "",
   });
 
-  const [coverUrl, setCoverUrl] = useState();
+  const [coverUrl, setCoverUrl] = useState(logo);
 
   useEffect(() => {
-    if (musicData.currentArtist && musicData.currentSong) {
+    if (musicData.currentArtist && musicData.currentSong && playing) {
       const fetchDeezerData = async () => {
         try {
           const response = await fetch(
@@ -44,37 +44,39 @@ export default function Index() {
       fetchDeezerData();
 
     }
-  }, [musicData.currentSong, musicData.currentArtist]);
+  }, [musicData.currentSong, musicData.currentArtist, playing]);
 
   useEffect(() => {
     const es = new EventSource(METADATA_URL);
 
-    const handleEventSourceMessage = (event: any) => {
-      const data = JSON.parse(event.data);
-      if (data.streamTitle) {
-        const [artist, song, aditionalInfo] = data.streamTitle.split(' - ');
+    if (playing) {
+      const handleEventSourceMessage = (event: any) => {
+        const data = JSON.parse(event.data);
+        if (data.streamTitle) {
+          const [artist, song, aditionalInfo] = data.streamTitle.split(' - ');
 
-        console.log(data.streamTitle);
+          console.log(data.streamTitle);
 
-        const updatedArtist = artist ? artist.trim() : "[Desconhecido]";
-        const updatedSong = song ? song.trim() : "[Desconhecido]";
-        const updatedAditionalInfo = aditionalInfo ? aditionalInfo.trim() : null;
+          const updatedArtist = artist ? artist.trim() : "[Desconhecido]";
+          const updatedSong = song ? song.trim() : "[Desconhecido]";
+          const updatedAditionalInfo = aditionalInfo ? aditionalInfo.trim() : null;
 
-        setMusicData({
-          currentArtist: updatedArtist,
-          currentSong: updatedSong,
-          aditionalInfo: updatedAditionalInfo,
-        });
-      }
-    };
+          setMusicData({
+            currentArtist: updatedArtist,
+            currentSong: updatedSong,
+            aditionalInfo: updatedAditionalInfo,
+          });
+        }
+      };
 
-    es.addEventListener("message", handleEventSourceMessage)
-    es.addEventListener("error", (error) => console.error('Erro no EventSource:', error))
+      es.addEventListener("message", handleEventSourceMessage)
+      es.addEventListener("error", (error) => console.error('Erro no EventSource:', error))
+    }
 
     return () => {
       es.close();
     };
-  }, []);
+  }, [playing]);
 
   useEffect(() => {
 
@@ -94,6 +96,7 @@ export default function Index() {
     };
 
     loadAudio();
+
     return () => {
       if (sound) {
         sound.unloadAsync();
@@ -105,6 +108,12 @@ export default function Index() {
     if (!sound) return;
     if (playing) {
       await sound.pauseAsync();
+      setCoverUrl(logo);
+      setMusicData({
+        currentSong: "WebRadio GRM",
+        currentArtist: "A sua música toca aqui!",
+        aditionalInfo: "",
+      })
     } else {
       await sound.playAsync();
     }
@@ -118,7 +127,6 @@ export default function Index() {
       <Image
         style={styles.backgroundImage}
         source={coverUrl}
-        placeholder={logo}
         contentFit="cover"
         transition={1000}
         blurRadius={20}
@@ -128,7 +136,6 @@ export default function Index() {
       <Image
         style={styles.image}
         source={coverUrl}
-        placeholder={logo}
         contentFit="cover"
         transition={1000}
       />
