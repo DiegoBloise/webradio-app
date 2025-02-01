@@ -1,7 +1,7 @@
 import { Text, View, StyleSheet, Button, TouchableOpacity } from "react-native";
 import { useAudioPlayer } from 'expo-audio'
-import { useEffect, useState } from "react";
-import { Image } from 'expo-image';
+import { SetStateAction, useEffect, useState } from "react";
+import { Image, ImageBackground } from 'expo-image';
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
 const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhvv";
@@ -12,14 +12,42 @@ export default function Index() {
 
   const [playing, setPlaying] = useState(false);
   const player = useAudioPlayer(STREAM_URL);
-  const [coverArt, setCoverArt] = useState(null);
-
 
   const [musicData, setMusicData] = useState({
-    currentSong: 'Loading...',
-    currentArtist: 'Loading...',
-    coverUrl: "",
+    currentSong: null,
+    currentArtist: null,
   });
+
+  const [coverUrl, setCoverUrl] = useState();
+
+  useEffect(() => {
+    if (musicData.currentArtist && musicData.currentSong) {
+      // Criação de uma função de callback que irá atualizar o estado local
+      //@ts-ignore
+      const handleDeezerResponse = (response) => {
+        if (response && response.data && response.data[0] && response.data[0].album) {
+          setCoverUrl(response.data[0].album.cover_big); // Atualiza a capa com a imagem da primeira música
+        }
+      };
+
+      // Cria a URL para a requisição JSONP
+      const script = document.createElement('script');
+      script.src = `https://api.deezer.com/search?q=${musicData.currentArtist} ${musicData.currentSong}&output=jsonp&callback=handleDeezerResponse`;
+
+      // Adiciona a função de callback no escopo global
+      //@ts-ignore
+      window.handleDeezerResponse = handleDeezerResponse;
+
+      document.body.appendChild(script);
+
+      // Limpeza do script e remoção do callback ao desmontar o componente
+      return () => {
+        document.body.removeChild(script);
+        //@ts-ignore
+        delete window.handleDeezerResponse; // Limpa a função de callback global
+      };
+    }
+  }, [musicData.currentSong, musicData.currentArtist]);
 
   useEffect(() => {
     const eventSource = new EventSource(METADATA_URL);
@@ -31,7 +59,6 @@ export default function Index() {
         setMusicData({
           currentSong: song.trim(),
           currentArtist: artist.trim(),
-          coverUrl: logo,
         });
       }
     };
@@ -53,28 +80,32 @@ export default function Index() {
     setPlaying(!playing);
   };
 
-  const blurhash =
-    '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
-
   return (
     <View
       style={styles.container}
     >
       <Image
-        style={styles.image}
-        source={logo}
+        style={styles.backgroundImage}
+        source={coverUrl}
+        placeholder={logo}
         contentFit="cover"
+        transition={1000}
+        blurRadius={20}
       />
 
-      {coverArt && <Image source={{ uri: musicData.coverUrl }} style={styles.cover} />}
+      <Image
+        style={styles.image}
+        source={coverUrl}
+        placeholder={logo}
+        contentFit="cover"
+        transition={1000}
+      />
 
-      {/* <Image source={{ uri: musicData.coverUrl }} /> */}
-
-      <Text style={styles.song}>{musicData.currentSong}</Text>
-      <Text style={styles.artist}>{musicData.currentArtist}</Text>
+      <Text style={styles.song}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
+      <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
 
       <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#FFF" }}>{playing ? "Pausar" : "Tocar"}</Text>
+        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000" }}>{playing ? "PAUSAR" : "TOCAR"}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -85,34 +116,55 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "black",
   },
   playButton: {
     padding: 25,
-    backgroundColor: "#2f1d70",
+    backgroundColor: "#FFF",
     borderRadius: 100,
+    margin: 25,
+    shadowColor: "black",
+    shadowOffset: { width: 5, height: 5 },
+    shadowRadius: 20
+  },
+  backgroundImage: {
+    position: "absolute",
+    zIndex: 0,
+    height: "100%",
+    width: "100%",
   },
   image: {
-    width: 200,
-    height: 200,
-    borderRadius: 100
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "black",
+    width: 350,
+    height: 350,
+    borderRadius: "100%",
+    borderColor: "white",
+    borderWidth: 2,
+    shadowColor: "black",
+    shadowOffset: { width: 5, height: 5 },
+    shadowRadius: 20
   },
   song: {
-    fontSize: 18,
-    color: "black",
+    fontWeight: "bold",
+    fontSize: 38,
+    fontStyle: "italic",
+    color: "white",
     marginTop: 10,
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10
   },
   artist: {
-    fontSize: 16,
-    color: "gray",
+    fontWeight: "bold",
+    fontSize: 22,
+    fontStyle: "italic",
+    color: "white",
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10
   },
   cover: {
-    width: 150,
-    height: 150,
-    margin: 20,
+    width: 300,
+    height: 300,
+    margin: 50,
   },
 })
