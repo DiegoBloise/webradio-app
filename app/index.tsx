@@ -190,7 +190,9 @@ export default function Index() {
           contentFit="cover"
           transition={1000}
         />
-        <View style={{ marginTop: 20 }}>
+        <View style={{
+          marginTop: 20
+        }}>
           <Text style={styles.song}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
           <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
           {musicData.aditionalInfo && <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
@@ -287,7 +289,10 @@ const styles = StyleSheet.create({
     shadowRadius: 20
   },
   musicDataContainer: {
-
+    alignContent: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
   },
   historyArtImage: {
     width: 130,
@@ -310,6 +315,7 @@ const styles = StyleSheet.create({
     paddingRight: 20
   },
   song: {
+    textAlign: "center",
     fontWeight: "bold",
     fontSize: 38,
     fontStyle: "italic",
@@ -319,6 +325,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10
   },
   artist: {
+    textAlign: "center",
     fontWeight: "bold",
     fontSize: 22,
     fontStyle: "italic",
@@ -328,6 +335,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10
   },
   aditionalInfo: {
+    textAlign: "center",
     fontWeight: "bold",
     fontSize: 16,
     fontStyle: "italic",
