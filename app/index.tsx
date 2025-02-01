@@ -3,6 +3,7 @@ import { Audio } from 'expo-av';
 import { useEffect, useState } from "react";
 import { Image } from 'expo-image';
 import { Sound } from "expo-av/build/Audio";
+import EventSource from "react-native-sse";
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
 const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhvv";
@@ -23,35 +24,28 @@ export default function Index() {
 
   useEffect(() => {
     if (musicData.currentArtist && musicData.currentSong) {
-      // Criação de uma função de callback que irá atualizar o estado local
-      //@ts-ignore
-      const handleDeezerResponse = (response) => {
-        if (response && response.data && response.data[0] && response.data[0].album) {
-          setCoverUrl(response.data[0].album.cover_big); // Atualiza a capa com a imagem da primeira música
+      // Criação da função que vai fazer a requisição para o Deezer
+      const fetchDeezerData = async () => {
+        try {
+          const response = await fetch(
+            `https://api.deezer.com/search?q=${musicData.currentArtist} ${musicData.currentSong}&output=json`
+          );
+          const data = await response.json();
+          if (data.data && data.data[0] && data.data[0].album) {
+            setCoverUrl(data.data[0].album.cover_big); // Atualiza a capa
+          }
+        } catch (error) {
+          console.error('Erro ao buscar dados no Deezer:', error);
         }
       };
 
-      // Cria a URL para a requisição JSONP
-      const script = document.createElement('script');
-      script.src = `https://api.deezer.com/search?q=${musicData.currentArtist} ${musicData.currentSong}&output=jsonp&callback=handleDeezerResponse`;
+      fetchDeezerData();
 
-      // Adiciona a função de callback no escopo global
-      //@ts-ignore
-      window.handleDeezerResponse = handleDeezerResponse;
-
-      document.body.appendChild(script);
-
-      // Limpeza do script e remoção do callback ao desmontar o componente
-      return () => {
-        document.body.removeChild(script);
-        //@ts-ignore
-        delete window.handleDeezerResponse; // Limpa a função de callback global
-      };
     }
   }, [musicData.currentSong, musicData.currentArtist]);
 
   useEffect(() => {
-    const eventSource = new EventSource(METADATA_URL);
+    const es = new EventSource(METADATA_URL);
 
     const handleEventSourceMessage = (event: any) => {
       const data = JSON.parse(event.data);
@@ -64,11 +58,11 @@ export default function Index() {
       }
     };
 
-    eventSource.onmessage = handleEventSourceMessage;
-    eventSource.onerror = (error) => console.error('Erro no EventSource:', error);
+    es.addEventListener("message", handleEventSourceMessage)
+    es.addEventListener("error", (error) => console.error('Erro no EventSource:', error))
 
     return () => {
-      eventSource.close();
+      es.close();
     };
   }, []);
 
