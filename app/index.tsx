@@ -1,7 +1,8 @@
-import { Text, View, StyleSheet, Button, TouchableOpacity } from "react-native";
-import { useAudioPlayer } from 'expo-audio'
-import { SetStateAction, useEffect, useState } from "react";
-import { Image, ImageBackground } from 'expo-image';
+import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { Audio } from 'expo-av';
+import { useEffect, useState } from "react";
+import { Image } from 'expo-image';
+import { Sound } from "expo-av/build/Audio";
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
 const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhvv";
@@ -11,7 +12,7 @@ const logo = require("@/assets/images/logo.png");
 export default function Index() {
 
   const [playing, setPlaying] = useState(false);
-  const player = useAudioPlayer(STREAM_URL);
+  const [sound, setSound] = useState<Sound | null>(null);
 
   const [musicData, setMusicData] = useState({
     currentSong: null,
@@ -71,11 +72,26 @@ export default function Index() {
     };
   }, []);
 
-  const togglePlay = () => {
+  useEffect(() => {
+    const loadAudio = async () => {
+      const { sound } = await Audio.Sound.createAsync({ uri: STREAM_URL });
+      setSound(sound);
+    };
+
+    loadAudio();
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, []);
+
+  const togglePlay = async () => {
+    if (!sound) return;
     if (playing) {
-      player.pause();
+      await sound.pauseAsync();
     } else {
-      player.play();
+      await sound.playAsync();
     }
     setPlaying(!playing);
   };
