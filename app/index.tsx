@@ -19,12 +19,7 @@ export default function Index() {
   const [playing, setPlaying] = useState(false);
   const [sound, setSound] = useState<Sound | null>(null);
 
-  const [recentsSongs, setRecentsSongs] = useState([{
-    currentArtist:"",
-    currentSong:"",
-    aditionalInfo:"",
-    coverUrl:""
-  }]);
+  const [recentsSongs, setRecentsSongs] = useState([]);
 
   const [musicData, setMusicData] = useState({
     currentSong: "WebRadio GRM",
@@ -45,31 +40,40 @@ export default function Index() {
       const fetchDeezerData = async () => {
         try {
           const response = await fetch(
-            `https://api.deezer.com/search?q=${musicData.currentArtist} ${musicData.currentSong}&output=json`
+            `https://api.deezer.com/search?q=${encodeURIComponent(musicData.currentArtist)} ${encodeURIComponent(musicData.currentSong)}&output=json`
           );
 
           const data = await response.json();
 
-          if (data.data && data.data[0] && data.data[0].album) {
-            setCoverUrl(data.data[0].album.cover_big);
-          } else {
-            setCoverUrl(logo);
-          }
+          const newCoverUrl = data.data?.[0]?.album?.cover_big || logo;
+
+          setCoverUrl(newCoverUrl);
+
+
         } catch (error) {
-          console.error('Erro ao buscar dados no Deezer:', error);
+          console.error("Erro ao buscar dados no Deezer:", error);
+          setCoverUrl(logo);
         }
       };
 
       fetchDeezerData();
 
-      setRecentsSongs([
-        { ...musicData, coverUrl: coverUrl },
-        ...recentsSongs
-      ]);
+      setRecentsSongs((prevSongs) => {
+        const isAlreadyAdded = prevSongs.some(
+          (song) =>
+            song.currentArtist === musicData.currentArtist &&
+            song.currentSong === musicData.currentSong
+        );
 
-      console.log('====================================');
-      console.log(recentsSongs);
-      console.log('====================================');
+        if (isAlreadyAdded) {
+          return prevSongs;
+        }
+
+        return [
+          { ...musicData, coverUrl },
+          ...prevSongs,
+        ].slice(0, 6);
+      });
     }
   }, [musicData.currentSong, musicData.currentArtist, playing]);
 
@@ -197,7 +201,7 @@ export default function Index() {
         <Text style={styles.historyRecentTitle}>Músicas Recentes</Text>
         <ScrollView horizontal>
           {
-            recentsSongs.map((song) => (
+            recentsSongs.slice(1).map((song) => (
               <View key={song.currentArtist} style={styles.recentSongInfo}>
                 <Image
                   style={styles.historyArtImage}
