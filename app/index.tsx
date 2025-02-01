@@ -1,9 +1,13 @@
-import { Text, View, StyleSheet, TouchableOpacity, StatusBar } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, StatusBar, Share, Alert } from "react-native";
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { useEffect, useState } from "react";
 import { Image } from 'expo-image';
 import { Sound } from "expo-av/build/Audio";
 import EventSource from "react-native-sse";
+
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Link } from "expo-router";
+
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
 const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhvv";
@@ -120,6 +124,26 @@ export default function Index() {
     setPlaying(!playing);
   };
 
+  const onShare = async () => {
+    try {
+      const result = await Share.share({
+        message:
+          'WebRadio GRM | A sua música toda aqui!\n\nAs Melhores Músicas das Décadas de 70, 80, 90 e 2000\n\nBaixe o app da rádio em: https://playergrmmais.blogspot.com/',
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error: any) {
+      Alert.alert(error.message);
+    }
+  };
+
   return (
     <View
       style={styles.container}
@@ -144,12 +168,24 @@ export default function Index() {
       <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
       {musicData.aditionalInfo && <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
 
-      <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000" }}>{playing ? "PAUSAR" : "TOCAR"}</Text>
-      </TouchableOpacity>
+      <View style={{ flexDirection: "row" }}>
+        <Link style={styles.playButton} href="https://playergrmmais.blogspot.com/">
+          <Ionicons name="globe-sharp" size={35} color="black" />
+        </Link>
+
+        <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
+          {playing ? <Ionicons name="pause" size={35} color="black" /> :
+            <Ionicons name="play" size={35} color="black" />
+          }
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onShare} style={styles.playButton}>
+          <Ionicons name="share-social-sharp" size={35} color="black" />
+        </TouchableOpacity>
+      </View>
 
       <StatusBar hidden translucent />
-    </View>
+    </View >
   );
 }
 
@@ -161,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   playButton: {
-    padding: 25,
+    padding: 15,
     backgroundColor: "#FFF",
     borderRadius: 100,
     margin: 25,
