@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, TouchableOpacity, StatusBar, Share, Alert } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, StatusBar, Share, Alert, Linking, ScrollView } from "react-native";
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { useEffect, useState } from "react";
 import { Image } from 'expo-image';
@@ -7,6 +7,7 @@ import EventSource from "react-native-sse";
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
@@ -29,12 +30,20 @@ export default function Index() {
 
   useEffect(() => {
     if (musicData.currentArtist && musicData.currentSong && playing) {
+
+      if (musicData.currentArtist.includes("GRM") || musicData.currentSong.includes("GRM")) {
+        setCoverUrl(logo);
+        return;
+      }
+
       const fetchDeezerData = async () => {
         try {
           const response = await fetch(
             `https://api.deezer.com/search?q=${musicData.currentArtist} ${musicData.currentSong}&output=json`
           );
+
           const data = await response.json();
+
           if (data.data && data.data[0] && data.data[0].album) {
             setCoverUrl(data.data[0].album.cover_big);
           } else {
@@ -145,9 +154,7 @@ export default function Index() {
   };
 
   return (
-    <View
-      style={styles.container}
-    >
+    <SafeAreaView style={styles.container}>
       <Image
         style={styles.backgroundImage}
         source={coverUrl}
@@ -157,53 +164,114 @@ export default function Index() {
         allowDownscaling={true}
       />
 
-      <Image
-        style={styles.image}
-        source={coverUrl}
-        contentFit="cover"
-        transition={1000}
-      />
 
-      <Text style={styles.song}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
-      <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
-      {musicData.aditionalInfo && <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
+      <View style={styles.musicDataContainer}>
+        <Image
+          style={styles.artImage}
+          source={coverUrl}
+          contentFit="cover"
+          transition={1000}
+        />
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.song}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
+          <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
+          {musicData.aditionalInfo && <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
+        </View>
+      </View>
+
+      <View style={styles.recentContainer}>
+        <Text style={styles.historyRecentTitle}>Músicas Recentes</Text>
+        <ScrollView horizontal>
+          <View style={styles.recentSongInfo}>
+            <Image
+              style={styles.historyArtImage}
+              source={coverUrl}
+              contentFit="cover"
+              transition={1000}
+            />
+            <View style={{ flexDirection: "column", marginLeft: 20 }}>
+              <Text style={styles.historySong}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
+              <Text style={styles.historyArtist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
+              {musicData.aditionalInfo && <Text style={styles.historyAditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
+            </View>
+          </View>
+          <View style={styles.recentSongInfo}>
+            <Image
+              style={styles.historyArtImage}
+              source={coverUrl}
+              contentFit="cover"
+              transition={1000}
+            />
+            <View style={{ flexDirection: "column", marginLeft: 20 }}>
+              <Text style={styles.historySong}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
+              <Text style={styles.historyArtist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
+              {musicData.aditionalInfo && <Text style={styles.historyAditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
+            </View>
+          </View>
+          <View style={styles.recentSongInfo}>
+            <Image
+              style={styles.historyArtImage}
+              source={coverUrl}
+              contentFit="cover"
+              transition={1000}
+            />
+            <View style={{ flexDirection: "column", marginLeft: 20 }}>
+              <Text style={styles.historySong}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
+              <Text style={styles.historyArtist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
+              {musicData.aditionalInfo && <Text style={styles.historyAditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
 
       <View style={{ flexDirection: "row" }}>
-        <Link style={styles.playButton} href="https://playergrmmais.blogspot.com/">
-          <Ionicons name="globe-sharp" size={35} color="black" />
-        </Link>
+        <TouchableOpacity onPress={() => {
+          Linking.openURL("https://playergrmmais.blogspot.com/");
+        }} style={styles.playButton}>
+          <Ionicons name="globe-sharp" size={34} color="black" />
+        </TouchableOpacity>
 
         <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
-          {playing ? <Ionicons name="pause" size={35} color="black" /> :
-            <Ionicons name="play" size={35} color="black" />
+          {
+            playing ?
+              <Ionicons name="pause" size={34} color="black" /> :
+              <Ionicons name="play" size={34} color="black" />
           }
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onShare} style={styles.playButton}>
-          <Ionicons name="share-social-sharp" size={35} color="black" />
+          <Ionicons name="share-social-sharp" size={34} color="black" />
         </TouchableOpacity>
       </View>
 
       <StatusBar hidden translucent />
-    </View >
+    </SafeAreaView >
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "black",
+    width: "100%",
   },
   playButton: {
     padding: 15,
+    width: 80,
+    height: 80,
     backgroundColor: "#FFF",
-    borderRadius: 100,
+    borderRadius: 200,
     margin: 25,
     shadowColor: "black",
     shadowOffset: { width: 5, height: 5 },
-    shadowRadius: 20
+    shadowRadius: 20,
+    alignContent: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+    flex: 1
   },
   backgroundImage: {
     position: "absolute",
@@ -211,9 +279,10 @@ const styles = StyleSheet.create({
     height: "100%",
     width: "100%",
   },
-  image: {
-    width: 350,
-    height: 350,
+  artImage: {
+    marginTop: 50,
+    width: 280,
+    height: 280,
     borderRadius: 200,
     borderColor: "white",
     borderWidth: 2,
@@ -221,12 +290,34 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 5, height: 5 },
     shadowRadius: 20
   },
+  musicDataContainer: {
+
+  },
+  historyArtImage: {
+    width: 130,
+    height: 130,
+    borderRadius: 10,
+    borderColor: "white",
+    borderWidth: 1,
+    shadowColor: "black",
+    shadowOffset: { width: 5, height: 5 },
+    shadowRadius: 20
+  },
+  recentContainer: {
+    marginTop: 60,
+    marginLeft: 40,
+    width: "100%"
+  },
+  recentSongInfo: {
+    flexDirection: "row",
+    marginRight: 20,
+    paddingRight: 20
+  },
   song: {
     fontWeight: "bold",
     fontSize: 38,
     fontStyle: "italic",
     color: "white",
-    marginTop: 10,
     textShadowColor: "black",
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10
@@ -249,9 +340,40 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10
   },
-  cover: {
-    width: 300,
-    height: 300,
-    margin: 50,
+  historyRecentTitle: {
+    fontWeight: "bold",
+    fontSize: 26,
+    color: "white",
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10,
+    marginBottom: 20,
   },
+  historySong: {
+    fontWeight: "bold",
+    fontSize: 22,
+    fontStyle: "italic",
+    color: "white",
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10
+  },
+  historyArtist: {
+    fontWeight: "bold",
+    fontSize: 16,
+    fontStyle: "italic",
+    color: "white",
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10
+  },
+  historyAditionalInfo: {
+    fontWeight: "bold",
+    fontSize: 14,
+    fontStyle: "italic",
+    color: "white",
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10
+  }
 })
