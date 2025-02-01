@@ -1,5 +1,5 @@
 import { Text, View, StyleSheet, TouchableOpacity, StatusBar } from "react-native";
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { useEffect, useState } from "react";
 import { Image } from 'expo-image';
 import { Sound } from "expo-av/build/Audio";
@@ -18,6 +18,7 @@ export default function Index() {
   const [musicData, setMusicData] = useState({
     currentSong: "",
     currentArtist: "",
+    aditionalInfo: "",
   });
 
   const [coverUrl, setCoverUrl] = useState();
@@ -51,16 +52,18 @@ export default function Index() {
     const handleEventSourceMessage = (event: any) => {
       const data = JSON.parse(event.data);
       if (data.streamTitle) {
-        const [artist, song] = data.streamTitle.split(' - ');
+        const [artist, song, aditionalInfo] = data.streamTitle.split(' - ');
 
         console.log(data.streamTitle);
 
         const updatedArtist = artist ? artist.trim() : "[Desconhecido]";
         const updatedSong = song ? song.trim() : "[Desconhecido]";
+        const updatedAditionalInfo = aditionalInfo ? aditionalInfo.trim() : null;
 
         setMusicData({
           currentArtist: updatedArtist,
-          currentSong: updatedSong
+          currentSong: updatedSong,
+          aditionalInfo: updatedAditionalInfo,
         });
       }
     };
@@ -74,6 +77,17 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
+
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      staysActiveInBackground: true,
+      interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+      playThroughEarpieceAndroid: false,
+    });
+
     const loadAudio = async () => {
       const { sound } = await Audio.Sound.createAsync({ uri: STREAM_URL });
       setSound(sound);
@@ -121,6 +135,7 @@ export default function Index() {
 
       <Text style={styles.song}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
       <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
+      {musicData.aditionalInfo && <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
 
       <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
         <Text style={{ fontSize: 18, fontWeight: "bold", color: "#000" }}>{playing ? "PAUSAR" : "TOCAR"}</Text>
@@ -176,6 +191,15 @@ const styles = StyleSheet.create({
   artist: {
     fontWeight: "bold",
     fontSize: 22,
+    fontStyle: "italic",
+    color: "white",
+    textShadowColor: "black",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10
+  },
+  aditionalInfo: {
+    fontWeight: "bold",
+    fontSize: 16,
     fontStyle: "italic",
     color: "white",
     textShadowColor: "black",
