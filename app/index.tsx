@@ -6,7 +6,6 @@ import { Sound } from "expo-av/build/Audio";
 import EventSource from "react-native-sse";
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
@@ -19,6 +18,13 @@ export default function Index() {
 
   const [playing, setPlaying] = useState(false);
   const [sound, setSound] = useState<Sound | null>(null);
+
+  const [recentsSongs, setRecentsSongs] = useState([{
+    currentArtist:"",
+    currentSong:"",
+    aditionalInfo:"",
+    coverUrl:""
+  }]);
 
   const [musicData, setMusicData] = useState({
     currentSong: "WebRadio GRM",
@@ -56,6 +62,14 @@ export default function Index() {
 
       fetchDeezerData();
 
+      setRecentsSongs([
+        { ...musicData, coverUrl: coverUrl },
+        ...recentsSongs
+      ]);
+
+      console.log('====================================');
+      console.log(recentsSongs);
+      console.log('====================================');
     }
   }, [musicData.currentSong, musicData.currentArtist, playing]);
 
@@ -182,45 +196,23 @@ export default function Index() {
       <View style={styles.recentContainer}>
         <Text style={styles.historyRecentTitle}>Músicas Recentes</Text>
         <ScrollView horizontal>
-          <View style={styles.recentSongInfo}>
-            <Image
-              style={styles.historyArtImage}
-              source={coverUrl}
-              contentFit="cover"
-              transition={1000}
-            />
-            <View style={{ flexDirection: "column", marginLeft: 20 }}>
-              <Text style={styles.historySong}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
-              <Text style={styles.historyArtist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
-              {musicData.aditionalInfo && <Text style={styles.historyAditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
-            </View>
-          </View>
-          <View style={styles.recentSongInfo}>
-            <Image
-              style={styles.historyArtImage}
-              source={coverUrl}
-              contentFit="cover"
-              transition={1000}
-            />
-            <View style={{ flexDirection: "column", marginLeft: 20 }}>
-              <Text style={styles.historySong}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
-              <Text style={styles.historyArtist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
-              {musicData.aditionalInfo && <Text style={styles.historyAditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
-            </View>
-          </View>
-          <View style={styles.recentSongInfo}>
-            <Image
-              style={styles.historyArtImage}
-              source={coverUrl}
-              contentFit="cover"
-              transition={1000}
-            />
-            <View style={{ flexDirection: "column", marginLeft: 20 }}>
-              <Text style={styles.historySong}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
-              <Text style={styles.historyArtist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
-              {musicData.aditionalInfo && <Text style={styles.historyAditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
-            </View>
-          </View>
+          {
+            recentsSongs.map((song) => (
+              <View key={song.currentArtist} style={styles.recentSongInfo}>
+                <Image
+                  style={styles.historyArtImage}
+                  source={song.coverUrl}
+                  contentFit="cover"
+                  transition={1000}
+                />
+                <View style={{ flexDirection: "column", marginLeft: 20 }}>
+                  <Text style={styles.historySong}>{song.currentSong ? song.currentSong : "Carregando"}</Text>
+                  <Text style={styles.historyArtist}>{song.currentArtist ? song.currentArtist : "Carregando"}</Text>
+                  {song.aditionalInfo && <Text style={styles.historyAditionalInfo}>{song.aditionalInfo ? song.aditionalInfo : "Carregando"}</Text>}
+                </View>
+              </View>
+            ))
+          }
         </ScrollView>
       </View>
 
