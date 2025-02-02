@@ -14,26 +14,32 @@ const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhv
 
 const logo = require("@/assets/images/logo.png");
 
+interface MusicData {
+  currentSong: string,
+  currentArtist: string,
+  aditionalInfo: string,
+  coverUrl: string
+}
+
 export default function Index() {
 
   const [playing, setPlaying] = useState(false);
   const [sound, setSound] = useState<Sound | null>(null);
 
-  const [recentsSongs, setRecentsSongs] = useState([]);
+  const [recentsSongs, setRecentsSongs] = useState<MusicData[]>([]);
 
   const [musicData, setMusicData] = useState({
     currentSong: "WebRadio GRM",
     currentArtist: "A sua música toca aqui!",
     aditionalInfo: "",
+    coverUrl: logo
   });
-
-  const [coverUrl, setCoverUrl] = useState(logo);
 
   useEffect(() => {
     if (musicData.currentArtist && musicData.currentSong && playing) {
 
       if (musicData.currentArtist.includes("GRM") || musicData.currentSong.includes("GRM")) {
-        setCoverUrl(logo);
+        setMusicData({ ...musicData, coverUrl: logo })
         return;
       }
 
@@ -47,12 +53,10 @@ export default function Index() {
 
           const newCoverUrl = data.data?.[0]?.album?.cover_big || logo;
 
-          setCoverUrl(newCoverUrl);
-
-
+          setMusicData({ ...musicData, coverUrl: newCoverUrl });
         } catch (error) {
           console.error("Erro ao buscar dados no Deezer:", error);
-          setCoverUrl(logo);
+          setMusicData({ ...musicData, coverUrl: logo })
         }
       };
 
@@ -70,7 +74,7 @@ export default function Index() {
         }
 
         return [
-          { ...musicData, coverUrl },
+          { ...musicData },
           ...prevSongs,
         ].slice(0, 6);
       });
@@ -93,6 +97,7 @@ export default function Index() {
           const updatedAditionalInfo = aditionalInfo ? aditionalInfo.trim() : null;
 
           setMusicData({
+            ...musicData,
             currentArtist: updatedArtist,
             currentSong: updatedSong,
             aditionalInfo: updatedAditionalInfo,
@@ -139,11 +144,11 @@ export default function Index() {
     if (!sound) return;
     if (playing) {
       await sound.pauseAsync();
-      setCoverUrl(logo);
       setMusicData({
         currentSong: "WebRadio GRM",
         currentArtist: "A sua música toca aqui!",
         aditionalInfo: "",
+        coverUrl: logo,
       })
     } else {
       await sound.playAsync();
@@ -175,7 +180,7 @@ export default function Index() {
     <SafeAreaView style={styles.container}>
       <Image
         style={styles.backgroundImage}
-        source={coverUrl}
+        source={musicData.coverUrl}
         contentFit="cover"
         transition={1000}
         blurRadius={20}
@@ -186,7 +191,7 @@ export default function Index() {
       <View style={styles.musicDataContainer}>
         <Image
           style={styles.artImage}
-          source={coverUrl}
+          source={musicData.coverUrl}
           contentFit="cover"
           transition={1000}
         />
@@ -195,7 +200,10 @@ export default function Index() {
         }}>
           <Text style={styles.song}>{musicData.currentSong ? musicData.currentSong : "Carregando"}</Text>
           <Text style={styles.artist}>{musicData.currentArtist ? musicData.currentArtist : "Carregando"}</Text>
-          {musicData.aditionalInfo && <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>}
+          {
+            !!musicData.aditionalInfo &&
+            <Text style={styles.aditionalInfo}>{musicData.aditionalInfo ? musicData.aditionalInfo : "Carregando"}</Text>
+          }
         </View>
       </View>
 
@@ -214,7 +222,10 @@ export default function Index() {
                 <View style={{ flexDirection: "column", marginLeft: 20 }}>
                   <Text style={styles.historySong}>{song.currentSong ? song.currentSong : "Carregando"}</Text>
                   <Text style={styles.historyArtist}>{song.currentArtist ? song.currentArtist : "Carregando"}</Text>
-                  {song.aditionalInfo && <Text style={styles.historyAditionalInfo}>{song.aditionalInfo ? song.aditionalInfo : "Carregando"}</Text>}
+                  {
+                    !!song.aditionalInfo &&
+                    <Text style={styles.historyAditionalInfo}>{song.aditionalInfo ? song.aditionalInfo : "Carregando"}</Text>
+                  }
                 </View>
               </View>
             ))
