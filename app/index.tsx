@@ -1,18 +1,18 @@
-import { Text, View, StyleSheet, TouchableOpacity, StatusBar, Share, Alert, Linking, ScrollView } from "react-native";
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
-import { useEffect, useState } from "react";
-import { Image } from 'expo-image';
 import { Sound } from "expo-av/build/Audio";
+import { Image } from 'expo-image';
+import { useEffect, useState } from "react";
+import { Alert, Linking, ScrollView, Share, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import EventSource from "react-native-sse";
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import logo from "@/assets/images/logo.png";
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
 const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhvv";
 
-const logo = require("@/assets/images/logo.png");
 
 interface MusicData {
   currentSong: string,
@@ -90,8 +90,6 @@ export default function Index() {
         if (data.streamTitle) {
           const [artist, song, aditionalInfo] = data.streamTitle.split(' - ');
 
-          console.log(data.streamTitle);
-
           const updatedArtist = artist ? artist.trim() : "[Desconhecido]";
           const updatedSong = song ? song.trim() : "[Desconhecido]";
           const updatedAditionalInfo = aditionalInfo ? aditionalInfo.trim() : null;
@@ -107,6 +105,13 @@ export default function Index() {
 
       es.addEventListener("message", handleEventSourceMessage)
       es.addEventListener("error", (error) => console.error('Erro no EventSource:', error))
+    } else {
+      setMusicData({
+        currentSong: "WebRadio GRM",
+        currentArtist: "A sua música toca aqui!",
+        aditionalInfo: "",
+        coverUrl: logo,
+      })
     }
 
     return () => {
@@ -144,12 +149,6 @@ export default function Index() {
     if (!sound) return;
     if (playing) {
       await sound.pauseAsync();
-      setMusicData({
-        currentSong: "WebRadio GRM",
-        currentArtist: "A sua música toca aqui!",
-        aditionalInfo: "",
-        coverUrl: logo,
-      })
     } else {
       await sound.playAsync();
     }
