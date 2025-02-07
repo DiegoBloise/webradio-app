@@ -1,17 +1,17 @@
-import { StyleSheet, View, Text } from "react-native";
-import { Image } from 'expo-image'
+import { Image } from 'expo-image';
+import { StyleSheet, Text, View } from "react-native";
 
-interface MusicInfoProps {
+interface SongInfoProps {
 	currentSong: string,
 	currentArtist: string,
 	aditionalInfo?: string,
 	coverUrl: string
 }
 
-export default function MusicInfo({ currentSong, currentArtist, aditionalInfo, coverUrl }: MusicInfoProps) {
+export default function SongInfo({ currentSong, currentArtist, aditionalInfo, coverUrl }: SongInfoProps) {
 
 	return (
-		<View style={styles.musicDataContainer}>
+		<View style={styles.container}>
 			<Image
 				style={styles.artImage}
 				source={coverUrl}
@@ -28,7 +28,7 @@ export default function MusicInfo({ currentSong, currentArtist, aditionalInfo, c
 }
 
 const styles = StyleSheet.create({
-	musicDataContainer: {
+	container: {
 		alignContent: "center",
 		justifyContent: "center",
 		alignItems: "center",

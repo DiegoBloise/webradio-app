@@ -1,22 +1,22 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { Sound } from "expo-av/build/Audio";
 import { useEffect, useState } from "react";
-import { Alert, Share, StatusBar, StyleSheet } from "react-native";
+import { StatusBar, StyleSheet } from "react-native";
 import EventSource from "react-native-sse";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import logo from "@/assets/images/logo.png";
 import ActionsBar from './components/actions-bar';
-import MusicInfo from './components/music-info';
-import RecentSongs from './components/recent-songs';
 import Background from './components/background';
+import SongInfo from './components/song-info';
+import RecentSongsList from './components/recent-songs-container';
 
 const STREAM_URL = "https://stream.zeno.fm/33utvy59nxhvv";
 const METADATA_URL = "https://api.zeno.fm/mounts/metadata/subscribe/33utvy59nxhvv";
 
 
-interface MusicData {
+interface SongData {
   currentSong: string,
   currentArtist: string,
   aditionalInfo: string,
@@ -28,9 +28,9 @@ export default function Index() {
   const [playing, setPlaying] = useState(false);
   const [sound, setSound] = useState<Sound | null>(null);
 
-  const [recentsSongs, setRecentsSongs] = useState<MusicData[]>([]);
+  const [recentsSongs, setRecentsSongs] = useState<SongData[]>([]);
 
-  const [musicData, setMusicData] = useState({
+  const [songData, setSongData] = useState({
     currentSong: "WebRadio GRM",
     currentArtist: "A sua música toca aqui!",
     aditionalInfo: "",
@@ -38,27 +38,27 @@ export default function Index() {
   });
 
   useEffect(() => {
-    if (musicData.currentArtist && musicData.currentSong && playing) {
+    if (songData.currentArtist && songData.currentSong && playing) {
 
-      if (musicData.currentArtist.includes("GRM") || musicData.currentSong.includes("GRM")) {
-        setMusicData({ ...musicData, coverUrl: logo })
+      if (songData.currentArtist.includes("GRM") || songData.currentSong.includes("GRM")) {
+        setSongData({ ...songData, coverUrl: logo })
         return;
       }
 
       const fetchDeezerData = async () => {
         try {
           const response = await fetch(
-            `https://api.deezer.com/search?q=${encodeURIComponent(musicData.currentArtist)} ${encodeURIComponent(musicData.currentSong)}&output=json`
+            `https://api.deezer.com/search?q=${encodeURIComponent(songData.currentArtist)} ${encodeURIComponent(songData.currentSong)}&output=json`
           );
 
           const data = await response.json();
 
           const newCoverUrl = data.data?.[0]?.album?.cover_big || logo;
 
-          setMusicData({ ...musicData, coverUrl: newCoverUrl });
+          setSongData({ ...songData, coverUrl: newCoverUrl });
         } catch (error) {
           console.error("Erro ao buscar dados no Deezer:", error);
-          setMusicData({ ...musicData, coverUrl: logo })
+          setSongData({ ...songData, coverUrl: logo })
         }
       };
 
@@ -67,8 +67,8 @@ export default function Index() {
       setRecentsSongs((prevSongs) => {
         const isAlreadyAdded = prevSongs.some(
           (song) =>
-            song.currentArtist === musicData.currentArtist &&
-            song.currentSong === musicData.currentSong
+            song.currentArtist === songData.currentArtist &&
+            song.currentSong === songData.currentSong
         );
 
         if (isAlreadyAdded) {
@@ -76,12 +76,12 @@ export default function Index() {
         }
 
         return [
-          { ...musicData },
+          { ...songData },
           ...prevSongs,
         ].slice(0, 6);
       });
     }
-  }, [musicData.currentSong, musicData.currentArtist, playing]);
+  }, [songData.currentSong, songData.currentArtist]);
 
   useEffect(() => {
     const es = new EventSource(METADATA_URL);
@@ -96,8 +96,8 @@ export default function Index() {
           const updatedSong = song ? song.trim() : "[Desconhecido]";
           const updatedAditionalInfo = aditionalInfo ? aditionalInfo.trim() : null;
 
-          setMusicData({
-            ...musicData,
+          setSongData({
+            ...songData,
             currentArtist: updatedArtist,
             currentSong: updatedSong,
             aditionalInfo: updatedAditionalInfo,
@@ -108,7 +108,7 @@ export default function Index() {
       es.addEventListener("message", handleEventSourceMessage)
       es.addEventListener("error", (error) => console.error('Erro no EventSource:', error))
     } else {
-      setMusicData({
+      setSongData({
         currentSong: "WebRadio GRM",
         currentArtist: "A sua música toca aqui!",
         aditionalInfo: "",
@@ -159,16 +159,16 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Background imageSrc={musicData.coverUrl} />
+      <Background imageSrc={songData.coverUrl} />
 
-      <MusicInfo
-        currentArtist={musicData.currentArtist}
-        currentSong={musicData.currentSong}
-        aditionalInfo={musicData.aditionalInfo}
-        coverUrl={musicData.coverUrl}
+      <SongInfo
+        currentArtist={songData.currentArtist}
+        currentSong={songData.currentSong}
+        aditionalInfo={songData.aditionalInfo}
+        coverUrl={songData.coverUrl}
       />
 
-      <RecentSongs recentSongs={recentsSongs} />
+      <RecentSongsList recentSongs={recentsSongs} />
 
       <ActionsBar playing={playing} togglePlay={togglePlay} />
 

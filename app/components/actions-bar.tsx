@@ -1,6 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Sound } from "expo-av/build/Audio";
-import { Linking, TouchableOpacity, View, StyleSheet, Alert, Share } from "react-native";
+import { Alert, Linking, Share, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface ActionsBarProps {
 	playing: boolean;
